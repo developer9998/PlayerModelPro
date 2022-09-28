@@ -12,6 +12,7 @@ using UnityEngine.InputSystem;
 using System.Net;
 using PlayerModelPlus.Scripts;
 using HarmonyLib;
+using Steamworks;
 
 namespace PlayerModelPlus
 {
@@ -54,6 +55,8 @@ namespace PlayerModelPlus
         public GameObject playermodel;
         public GameObject clone_body;
 
+        public Transform nachoEngineText;
+
         public Material[] mat_preview;
         public Material defMat;
         public Material invisibleMaterial;
@@ -79,8 +82,9 @@ namespace PlayerModelPlus
             gameObject.AddComponent<Appearance>();
 
             invisibleMaterial = new Material(Shader.Find("Standard"));
-            invisibleMaterial.SetColor("_Color", new Color(0, 0, 0, 1.0f));;
-            invisibleMaterial.SetFloat("_Mode", 3);
+            invisibleMaterial.SetColor("_Color", Color.clear);
+            invisibleMaterial.SetFloat("_Mode", 2);
+            invisibleMaterial.SetFloat("_Glossiness", 0.0f);
             invisibleMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
             invisibleMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcColor);
             invisibleMaterial.EnableKeyword("_ALPHABLEND_ON");
@@ -173,6 +177,9 @@ namespace PlayerModelPlus
             left_empty.name = "LeftEmpty";
             right_empty.name = "RightEmpty";
 
+            nachoEngineText = misc.transform.Find("nachoengine_playermodelmod");
+            nachoEngineText.gameObject.AddComponent<Preview>();
+
             ModStart = true;
 
             yield break;
@@ -182,10 +189,7 @@ namespace PlayerModelPlus
 
         IEnumerator PressChangeButton()
         {
-            if (GameObject.Find("nachoengine_playermodelmod"))
-            {
-                Destroy(GameObject.Find("nachoengine_playermodelmod"));
-            }
+            nachoEngineText.GetComponent<MeshRenderer>().forceRenderingOff = true;
 
             if (IsGorilla == true)//switching from gorilla to playermodel
             {

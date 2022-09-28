@@ -75,11 +75,6 @@ namespace DitzelGames.FastIK
             {
                 Target = new GameObject(gameObject.name + " Target").transform;
 
-                GameObject tempObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                GameObject.Destroy(tempObject.GetComponent<Collider>());
-                tempObject.transform.SetParent(Target, false);
-                tempObject.transform.localScale = Vector3.one * 0.25f;
-
                 SetPositionRootSpace(Target, GetPositionRootSpace(transform));
             }
             StartRotationTarget = GetRotationRootSpace(Target);

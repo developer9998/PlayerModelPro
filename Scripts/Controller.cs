@@ -13,21 +13,26 @@ namespace PlayerModelPlus.Scripts
         public static Controller Instance;
 
         public GameObject misc_orb;
+
+        public string[] player_info;
         public string playermodel_head = "playermodel.head";
         public string playermodel_torso = "playermodel.torso";
         public string playermodel_lefthand = "playermodel.lefthand";
         public string playermodel_righthand = "playermodel.righthand";
         public string player_info_stream;
-        public string[] player_info;
         public string playermodel_name;
         public string playermodel_author;
+        public string namegui;
+
         public bool CustomColors;
         public bool GameModeTextures;
-        public GameObject player_preview;
-        public string namegui;
+
         public float rotationY = -60f;
         public float localPositionY = 0.15f;
+
         public Vector3 pos;
+
+        public GameObject player_preview;
         public GameObject player_body;
         public GameObject offsetL;
         public GameObject offsetR;
@@ -38,6 +43,7 @@ namespace PlayerModelPlus.Scripts
         public GameObject headtarget;
         public GameObject poleR;
         public GameObject poleL;
+
         public Quaternion headoffset;
 
         void Start()
@@ -196,106 +202,97 @@ namespace PlayerModelPlus.Scripts
 
         public void AssignModel()
         {
-            // makes a new object used to press buttons with a new one in the playermodel and disables the gorilla one
-            GameObject left_finger = GameObject.Find("playermodel.left_finger");
-            GameObject right_finger = GameObject.Find("playermodel.right_finger");
 
-            /* 
-            if (left_finger != null && right_finger != null)
+            try
             {
-                left_finger.AddComponent<SphereCollider>().radius = 0.01f;
-                right_finger.AddComponent<SphereCollider>().radius = 0.01f;
+                // left hand
 
-                left_finger.layer = 10;
-                right_finger.layer = 10;
+                offsetL = new GameObject("offsetL");
 
-                GameObject.Find("RightHandTriggerCollider").GetComponent<SphereCollider>().enabled = false;
-                GameObject.Find("LeftHandTriggerCollider").GetComponent<SphereCollider>().enabled = false;
-            }*/
+                poleL = new GameObject("poleL");
+                poleL.transform.SetParent(root.transform, false);
+                // root, the playermodel's root
+                poleL.transform.localPosition = new Vector3(-5f, -5f, -10);
 
-            // left hand
+                GameObject hand_l = GorillaTagger.Instance.offlineVRRig.leftHandTransform.parent.gameObject;
+                // hand_l, the gorillalocomotion's left hand
 
-            offsetL = new GameObject("offsetL");
+                offsetL.AddComponent<TransformFollow>().transformToFollow = hand_l.transform;
 
-            poleL = new GameObject("poleL");
+                GameObject lefthandpos = new GameObject("playermodel.lefthandpos");
+                // lefthandpos, the global position of the gorilla's left forearm
 
-            poleL.transform.SetParent(root.transform, false);
-            // root, the playermodel's root
-            poleL.transform.localPosition = new Vector3(-5f, -5f, -10);
+                GameObject lefthandparent = HandLeft.transform.parent.gameObject;
+                // lefthandparent, the gorilla's forearm
+                lefthandpos.transform.SetParent(lefthandparent.transform, false);
+                lefthandpos.transform.SetPositionAndRotation(HandLeft.transform.position, HandLeft.transform.rotation);
+                HandLeft.transform.SetPositionAndRotation(hand_l.transform.position, hand_l.transform.rotation);
+                // HandLeft, the playermodel's left hand
 
-            GameObject hand_l = GorillaTagger.Instance.offlineVRRig.leftHandTransform.parent.gameObject;
-            // hand_l, the gorillalocomotion's left hand
+                Quaternion rotL = Quaternion.Euler(HandLeft.transform.localRotation.eulerAngles.x, HandLeft.transform.localRotation.eulerAngles.y, HandLeft.transform.localRotation.eulerAngles.z + 20f);
+                // rotL, an edited version of HandLeft
+                HandLeft.transform.position = hand_l.transform.position;
+                HandLeft.transform.localRotation = rotL;
+                HandLeft.transform.SetParent(hand_l.transform, true);
+                HandLeft = lefthandpos;
 
-            offsetL.AddComponent<TransformFollow>().transformToFollow = hand_l.transform;
+                // right hand
 
-            GameObject lefthandpos = new GameObject("playermodel.lefthandpos");
-            // lefthandpos, the global position of the gorilla's left forearm
+                offsetR = new GameObject("offsetR");
 
-            GameObject lefthandparent = HandLeft.transform.parent.gameObject;
-            // lefthandparent, the gorilla's forearm
-            lefthandpos.transform.SetParent(lefthandparent.transform, false);
-            lefthandpos.transform.SetPositionAndRotation(HandLeft.transform.position, HandLeft.transform.rotation);
-            HandLeft.transform.SetPositionAndRotation(hand_l.transform.position, hand_l.transform.rotation);
-            // HandLeft, the playermodel's left hand
+                poleR = new GameObject("poleR");
+                poleR.transform.SetParent(root.transform, false);
+                // root, the playermodel's root
 
-            Quaternion rotL = Quaternion.Euler(HandLeft.transform.localRotation.eulerAngles.x, HandLeft.transform.localRotation.eulerAngles.y, HandLeft.transform.localRotation.eulerAngles.z + 20f);
-            // rotL, an edited version of HandLeft
-            HandLeft.transform.position = hand_l.transform.position;
-            HandLeft.transform.localRotation = rotL;
-            HandLeft.transform.SetParent(hand_l.transform, true);
-            HandLeft = lefthandpos;
+                poleR.transform.localPosition = new Vector3(5f, -5f, -10);
 
-            // right hand
+                GameObject hand_r = GorillaTagger.Instance.offlineVRRig.rightHandTransform.parent.gameObject;
+                // hand_r, the gorillalocomotion's right hand
 
-            offsetR = new GameObject("offsetR");
+                offsetR.AddComponent<TransformFollow>().transformToFollow = hand_r.transform;
 
-            poleR = new GameObject("poleR");
-            poleR.transform.SetParent(root.transform, false);
-            // root, the playermodel's root
+                GameObject righthandpos = new GameObject("playermodel.righthandpos");
+                // righthandpos, the global position of the gorilla's right forearm
 
-            poleR.transform.localPosition = new Vector3(5f, -5f, -10);
+                GameObject righthandparent = HandRight.transform.parent.gameObject;
+                // righthandparent, the gorilla's right forearm
+                righthandpos.transform.SetParent(righthandparent.transform, false);
+                righthandpos.transform.SetPositionAndRotation(HandRight.transform.position, HandRight.transform.rotation);
+                HandRight.transform.SetPositionAndRotation(hand_r.transform.position, hand_r.transform.rotation);
+                // HandRight, the playermodel's right hand
 
-            GameObject hand_r = GorillaTagger.Instance.offlineVRRig.rightHandTransform.parent.gameObject;
-            // hand_r, the gorillalocomotion's right hand
+                Quaternion rotR = Quaternion.Euler(HandRight.transform.localRotation.eulerAngles.x, HandRight.transform.localRotation.eulerAngles.y, HandRight.transform.localRotation.eulerAngles.z - 20f);
+                // rotR, an edited version of HandRight
+                HandRight.transform.position = hand_r.transform.position;
+                HandRight.transform.localRotation = rotR; ;
+                HandRight.transform.SetParent(hand_r.transform, true);
+                HandRight = righthandpos;
 
-            offsetR.AddComponent<TransformFollow>().transformToFollow = hand_r.transform;
+                // left hand ik
+                FastIKFabric leftHandFabric = HandLeft.AddComponent<FastIKFabric>();
+                leftHandFabric.Target = offsetL.transform;
+                leftHandFabric.Pole = poleL.transform;
 
-            GameObject righthandpos = new GameObject("playermodel.righthandpos");
-            // righthandpos, the global position of the gorilla's right forearm
+                // right hand ik
+                FastIKFabric rightHandFabric = HandRight.AddComponent<FastIKFabric>();
+                rightHandFabric.Target = offsetR.transform;
+                rightHandFabric.Pole = poleR.transform;
 
-            GameObject righthandparent = HandRight.transform.parent.gameObject;
-            // righthandparent, the gorilla's right forearm
-            righthandpos.transform.SetParent(righthandparent.transform, false);
-            righthandpos.transform.SetPositionAndRotation(HandRight.transform.position, HandRight.transform.rotation);
-            HandRight.transform.SetPositionAndRotation(hand_r.transform.position, hand_r.transform.rotation);
-            // HandRight, the playermodel's right hand
+                // body
+                root.transform.SetParent(GorillaTagger.Instance.offlineVRRig.mainSkin.transform.parent.Find("rig/body").transform, false);
+                root.transform.localRotation = Quaternion.identity;
 
-            Quaternion rotR = Quaternion.Euler(HandRight.transform.localRotation.eulerAngles.x, HandRight.transform.localRotation.eulerAngles.y, HandRight.transform.localRotation.eulerAngles.z - 20f);
-            // rotR, an edited version of HandRight
-            HandRight.transform.position = hand_r.transform.position;
-            HandRight.transform.localRotation = rotR;;
-            HandRight.transform.SetParent(hand_r.transform, true);
-            HandRight = righthandpos;
-
-            // left hand ik
-            FastIKFabric leftHandFabric = HandLeft.AddComponent<FastIKFabric>();
-            leftHandFabric.Target = offsetL.transform;
-            leftHandFabric.Pole = poleL.transform;
-
-            // right hand ik
-            FastIKFabric rightHandFabric = HandRight.AddComponent<FastIKFabric>();
-            rightHandFabric.Target = offsetR.transform;
-            rightHandFabric.Pole = poleR.transform;
-
-            // body
-            root.transform.SetParent(GorillaTagger.Instance.offlineVRRig.mainSkin.transform.parent.Find("rig/body").transform, false);
-            root.transform.localRotation = Quaternion.Euler(0f, 0.0f, 0.0f);
-
-            headbone.transform.localRotation = headtarget.transform.localRotation;
-            headoffset = headtarget.transform.localRotation;
-            headbone.transform.SetParent(headtarget.transform, true);
-            headbone.transform.localRotation = Quaternion.Euler(headoffset.x - 8, headoffset.y, headoffset.z);
-
+                // head
+                headbone.transform.localRotation = headtarget.transform.localRotation;
+                headoffset = headtarget.transform.localRotation;
+                headbone.transform.SetParent(headtarget.transform, true);
+                headbone.transform.localRotation = Quaternion.Euler(headoffset.x - 8, headoffset.y, headoffset.z);
+            }
+            catch (InvalidCastException e)
+            {
+                Debug.LogError("Failed to assign rig:" + e.Message + " " + e.Source);
+                return;
+            }
         }
     }
 }
