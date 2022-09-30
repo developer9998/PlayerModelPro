@@ -5,14 +5,14 @@ using Utilla;
 using System.Reflection;
 using System.IO;
 using System.Collections;
-using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using System.Net;
 using PlayerModelPlus.Scripts;
 using HarmonyLib;
-using Steamworks;
+using UnityEngine.XR;
+using Valve.VR;
 
 namespace PlayerModelPlus
 {
@@ -20,8 +20,8 @@ namespace PlayerModelPlus
     /// This is your mod's main class.
     /// </summary>
 
-    /* This attribute tells Utilla to look for [ModdedGameJoin] and [ModdedGameLeave] */
     [BepInDependency("org.legoandmars.gorillatag.utilla", "1.5.0")]
+    // you better have newtonsoft you stinker.
     [BepInPlugin(PluginInfo.GUID, PluginInfo.Name, PluginInfo.Version)]
     public class Plugin : BaseUnityPlugin
     {
@@ -36,6 +36,7 @@ namespace PlayerModelPlus
         public int mat_index;
         public int playerIndex = 0;
         public int assignedIndex = 0; // index of array, 
+        public int currentPreviewMaterial = 0;
 
         public float currentTime = 0;
 
@@ -61,11 +62,14 @@ namespace PlayerModelPlus
         public Material defMat;
         public Material invisibleMaterial;
         public Material chestMaterial;
-
         public Material player_main_material;
 
         public Text model_text;
         public Text author_text;
+
+        public bool isPriorModel = false;
+        public string priorName = "";
+        public int priorIndex = 0;
 
         void Start()
         {
@@ -78,9 +82,11 @@ namespace PlayerModelPlus
 
         IEnumerator StartPlayerModel()
         {
+            // creates the controller and appearance components
             gameObject.AddComponent<Controller>();
             gameObject.AddComponent<Appearance>();
 
+            // setting up materials
             invisibleMaterial = new Material(Shader.Find("Standard"));
             invisibleMaterial.SetColor("_Color", Color.clear);
             invisibleMaterial.SetFloat("_Mode", 2);
@@ -92,6 +98,7 @@ namespace PlayerModelPlus
 
             chestMaterial = GorillaTagger.Instance.offlineVRRig.mainSkin.transform.parent.Find("rig/body/gorillachest").GetComponent<MeshRenderer>().material;
 
+            // creates the local folder
             rootPath = Directory.GetCurrentDirectory();
             playerpath = Path.Combine(rootPath, "BepInEx", "Plugins", "PlayerModelPlus", "CustomModels");
 
@@ -101,30 +108,23 @@ namespace PlayerModelPlus
                 yield return new WaitForSeconds(0.1f);
 
                 WebClient webClient = new WebClient();
-
-                webClient.DownloadFile("https://drive.google.com/uc?export=download&id=17VmQyBhn78ToCASyQ0dJHuoPoHPncyAi", playerpath + @"\Amogus.gtmodel");
-                webClient.DownloadFile("https://drive.google.com/uc?export=download&id=1j2ny1ohnHkUoK-yqM7OZV-zt4ZGxuu66", playerpath + @"\Babbling Baboon.gtmodel");
-                webClient.DownloadFile("https://drive.google.com/uc?export=download&id=1CFIPOZ11cqXAuXlt1np4l7j3kBTGtaXO", playerpath + @"\Beautifulboy.gtmodel");
-                webClient.DownloadFile("https://drive.google.com/uc?export=download&id=18niPks_72vsBnIbaWpvT4iwD7YA7nyoA", playerpath + @"\character stump.gtmodel");
                 webClient.DownloadFile("https://drive.google.com/uc?export=download&id=1tz41u9au0TxWjRFQ5sYAqp2rnoIaTmP4", playerpath + @"\Kyle The Robot.gtmodel");
-                webClient.DownloadFile("https://drive.google.com/uc?export=download&id=1niqY3Rnz0VPAwNYE4gtEaGwaRGqWtTGJ", playerpath + @"\Lar Gibbon.gtmodel");
-                webClient.DownloadFile("https://drive.google.com/uc?export=download&id=1aXc6nbGFQnA7R8F64LUUthhDEToLP5qF", playerpath + @"\Siamang Gibbon.gtmodel");
-                webClient.DownloadFile("https://drive.google.com/uc?export=download&id=12L-F8T_AIG8xzpdgfZ_5H0UmOOHOljoU", playerpath + @"\The Ape.gtmodel");
-                webClient.DownloadFile("https://drive.google.com/uc?export=download&id=1izFz5mBLcNWUn4oq7qaPup9_CzlTRUhC", playerpath + @"\The Chimp.gtmodel");
-                webClient.DownloadFile("https://drive.google.com/uc?export=download&id=1L2uTiElqeLRzC8zwFCjNRtMiO2Es14Np", playerpath + @"\Toon Gorilla.gtmodel");
-
+               
                 yield return new WaitForSeconds(0.2f);
             }
 
+            // get files
             files = Directory.GetFiles(playerpath, "*.gtmodel");//cant Path.GetFileName - cant convert string[] to string
             fileName = new string[files.Length]; //creating new array with same length as files array
 
             for (int i = 0; i < fileName.Length; i++)
                 fileName[i] = Path.GetFileName(files[i]); //getting file names from directories
 
+            // get misc bundle
             AssetBundle bundle = AssetBundle.LoadFromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream("PlayerModelPlus.Resources.PlayerModelStand"));
             GameObject localasset = Instantiate(bundle.LoadAsset<GameObject>("misc"));
 
+            // get the gameobject and add the components
             GameObject misc = localasset.transform.GetChild(0).gameObject;
 
             misc.transform.position = new Vector3(-53.3f, 16.216f, -124.6f);
@@ -161,13 +161,12 @@ namespace PlayerModelPlus
                 misc_orbs[i].GetComponent<PlayerButton>().setColour = false;
             }
 
-            defMat = Resources.Load<Material>("objects/treeroom/materials/lightfur");
-
             mat_preview = new Material[misc_orbs.Length];
 
             for (int i = 0; i < mat_preview.Length; i++)
                 mat_preview[i] = misc_orbs[i].GetComponent<MeshRenderer>().material;
 
+            // creates empty hand objects, not sure what they're for though
             GameObject left_empty = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             GameObject right_empty = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             left_empty.GetComponent<SphereCollider>().enabled = false;
@@ -177,13 +176,29 @@ namespace PlayerModelPlus
             left_empty.name = "LeftEmpty";
             right_empty.name = "RightEmpty";
 
+            // gets the text mesh and adds its 
             nachoEngineText = misc.transform.Find("nachoengine_playermodelmod");
             nachoEngineText.gameObject.AddComponent<Preview>();
 
+            // moves the object down
+            misc.transform.Find("displaytext").localPosition -= new Vector3(0, 0.135f, 0);
+            misc.transform.Find("misc.fur").localPosition -= new Vector3(0, 0.135f, 0);
+            misc.transform.Find("misc.ice").localPosition -= new Vector3(0, 0.135f, 0);
+            misc.transform.Find("misc.rock").localPosition -= new Vector3(0, 0.135f, 0);
+            misc.transform.Find("misc.lava").localPosition -= new Vector3(0, 0.135f, 0);
+            misc.transform.Find("misc.rightpage").localPosition -= new Vector3(0, 0.135f, 0);
+            misc.transform.Find("misc.leftpage").localPosition -= new Vector3(0, 0.135f, 0);
+            misc.transform.Find("misc.display").localPosition -= new Vector3(0, 0.135f, 0);
+            misc.transform.Find("misc.selector").localPosition -= new Vector3(0, 0.135f, 0);
+            misc.transform.Find("Canvas").localPosition -= new Vector3(0, 0.135f, 0);
+
+            // makes the update function work
             ModStart = true;
 
             yield break;
         }
+
+        public void ChangeMainButton() => misc_orbs[0].GetComponent<MeshRenderer>().material = mat_preview[0];
 
         void OnGameInitialized(object sender, EventArgs e) => StartCoroutine(StartPlayerModel());
 
@@ -198,6 +213,10 @@ namespace PlayerModelPlus
                 assignedIndex = playerIndex;
                 IsGorilla = false;
                 Controller.Instance.AssignModel();
+
+                PlayerPrefs.SetInt("PlayerModelProIsPriorModel", 1);
+                PlayerPrefs.SetString("PlayerModelProPriorName", fileName[playerIndex]);
+                PlayerPrefs.SetInt("PlayerModelProPriorIndex", playerIndex);
             }
             else
             {
@@ -207,7 +226,9 @@ namespace PlayerModelPlus
                     IsGorilla = true;
                     player_main_material = null;
 
-                    //Appearance.Instance.ShowOnlineRig();
+                    PlayerPrefs.SetInt("PlayerModelProIsPriorModel", 0);
+                    PlayerPrefs.SetString("PlayerModelProPriorName", fileName[playerIndex]);
+                    PlayerPrefs.SetInt("PlayerModelProPriorIndex", playerIndex);
                 }
                 else//playermodel to playermodel
                 {
@@ -215,50 +236,66 @@ namespace PlayerModelPlus
                     IsGorilla = false;
                     player_main_material = null;
                     assignedIndex = playerIndex;
+
+                    PlayerPrefs.SetInt("PlayerModelProIsPriorModel", 1);
+                    PlayerPrefs.SetString("PlayerModelProPriorName", fileName[playerIndex]);
+                    PlayerPrefs.SetInt("PlayerModelProPriorIndex", playerIndex);
                 }
             }
 
             yield break;
         }
 
-        public void ButtonPress(int button)
+        public void ButtonPress(int button) => ButtonToPress(button);
+
+        private void ButtonToPress(int button)
         {
             switch (button)
             {
                 case 1:
                     StartCoroutine(PressChangeButton());
-                    
                     break;
+
                 case 2:
                     playerIndex++;
+
                     if (playerIndex > fileName.Length - 1)
                         playerIndex = 0;
+
                     Controller.Instance.PreviewModel(playerIndex);
 
                     break;
+
                 case 3:
                     playerIndex--;
+
                     if (playerIndex < 0)
                         playerIndex = fileName.Length - 1;//10 items but starts from 0 so 0 to 9 = 10 items
+
                     Controller.Instance.PreviewModel(playerIndex);
 
                     break;
+
                 case 4:
                     Controller.Instance.player_preview.GetComponent<MeshRenderer>().material = mat_preview[0];
-
+                    currentPreviewMaterial = 0;
                     break;
+
                 case 5:
                     Controller.Instance.player_preview.GetComponent<MeshRenderer>().material = mat_preview[1];
-
+                    currentPreviewMaterial = 1;
                     break;
+
                 case 6:
                     Controller.Instance.player_preview.GetComponent<MeshRenderer>().material = mat_preview[2];
-
+                    currentPreviewMaterial = 2;
                     break;
+
                 case 7:
                     Controller.Instance.player_preview.GetComponent<MeshRenderer>().material = mat_preview[3];
-
+                    currentPreviewMaterial = 3;
                     break;
+
             }
         }
 
@@ -286,19 +323,34 @@ namespace PlayerModelPlus
             /* Code here runs every frame when the mod is enabled */
 
             if (Keyboard.current.jKey.wasPressedThisFrame)
-                SelectButton.GetComponent<PlayerButton>().Press();
-
-            if (Keyboard.current.hKey.wasPressedThisFrame)
-                LeftButton.GetComponent<PlayerButton>().Press();
-
+                ButtonToPress(1);
             if (Keyboard.current.kKey.wasPressedThisFrame)
-                RightButton.GetComponent<PlayerButton>().Press();
+                ButtonToPress(2);
+            if (Keyboard.current.hKey.wasPressedThisFrame)
+                ButtonToPress(3);
+
+            if (Keyboard.current.vKey.wasPressedThisFrame)
+                ButtonToPress(4);
+            if (Keyboard.current.bKey.wasPressedThisFrame)
+                ButtonToPress(5);
+            if (Keyboard.current.nKey.wasPressedThisFrame)
+                ButtonToPress(6);
+            if (Keyboard.current.mKey.wasPressedThisFrame)
+                ButtonToPress(7);
+
+            if (playermodel != null)
+            {
+                if (XRSettings.loadedDeviceName == "Oculus")
+                    playermodel.GetComponent<SkinnedMeshRenderer>().enabled = OVRManager.hasInputFocus;
+                if (OpenVR.Overlay != null)
+                    playermodel.GetComponent<SkinnedMeshRenderer>().enabled = !OpenVR.Overlay.IsDashboardVisible();
+            }
 
             Controller.Instance.rotationY -= 0.5f;
 
             if (PhotonNetwork.InRoom)
             {
-                if (IsGorilla == true)//in a room, is gorilla model
+                if (IsGorilla) //in a room, is gorilla model
                 {
                     flag_inroom = true;
                     Appearance.Instance.flag1 = true;
@@ -346,11 +398,11 @@ namespace PlayerModelPlus
 
                 flag_inroom = false;
                 clone_body = null;
-                if (IsGorilla == true)//not in a room, is gorilla model
+
+                if (IsGorilla) //not in a room, is gorilla model
                 {
                     Appearance.Instance.flag1 = true;
                     Appearance.Instance.ShowOfflineRig();
-
                 }
                 else//not in a room, is playermodel
                 {
@@ -358,7 +410,9 @@ namespace PlayerModelPlus
                     if (playermodel != null)
                     {
                         Appearance.Instance.ResetMaterial(playermodel);
+
                         Appearance.Instance.HideOfflineRig();
+
                         if (Controller.Instance.CustomColors)
                             Appearance.Instance.AssignColor(playermodel);
                     }

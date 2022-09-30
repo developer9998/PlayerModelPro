@@ -9,13 +9,22 @@ namespace PlayerModelPlus.Scripts
     public class Appearance : MonoBehaviourPunCallbacks
     {
         public static Appearance Instance;
+
         public List<GameObject> playerGameObjects = new List<GameObject>();
         public GameObject serverGameObjectD;
-        public bool flag1 = true;
         public GameObject gorillabody;
-        public Renderer rendGorilla;
-        public Material mat;
+
+        public List<string> MainGameMat = new List<string>() { "infected (Instance)", "It (Instance)", "ice (Instance)" };
+        public List<string> BrawlOutMat = new List<string>() { "paintsplattersmallblue (Instance)", "paintsplattersmallorange (Instance)" };
+        public List<string> BrawlInMat = new List<string>() { "bluealive (Instance)", "bluehit (Instance)", "bluestunned (Instance)", "orangealive (Instance)", "orangehit (Instance)", "orangestunned (Instance)" };
+
+        public bool flag1 = true;
         public bool ModelShown = true;
+
+        public Renderer rendGorilla;
+
+        public Material mat;
+
         Color gorillacolor;
 
         void Start() => Instance = this;
@@ -93,101 +102,36 @@ namespace PlayerModelPlus.Scripts
 
         public void ResetMaterial(GameObject playermodel) => playermodel.GetComponent<SkinnedMeshRenderer>().material = Plugin.Instance.player_main_material;
 
-        bool IsBattleMat(GameObject tbod)
-        {
-            if (tbod.GetComponent<Renderer>().material.name == "bluealive (Instance)")
-            {
-                return true;
-            }
-            if (tbod.GetComponent<Renderer>().material.name == "bluehit (Instance)")
-            {
-                return true;
-            }
-            if (tbod.GetComponent<Renderer>().material.name == "bluestunned (Instance)")
-            {
-                return true;
-            }
-            if (tbod.GetComponent<Renderer>().material.name == "orangealive (Instance)")
-            {
-                return true;
-            }
-            if (tbod.GetComponent<Renderer>().material.name == "orangehit (Instance)")
-            {
-                return true;
-            }
-            if (tbod.GetComponent<Renderer>().material.name == "orangestunned (Instance)")
-            {
-                return true;
-            }
-            if (tbod.GetComponent<Renderer>().material.name == "paintsplattersmallblue (Instance)")
-            {
-                return true;
-            }
-            if (tbod.GetComponent<Renderer>().material.name == "paintsplattersmallorange (Instance)")
-            {
-                return true;
-            }
-            return false;
-        }
-
-        bool IsBattleMat2(GameObject tbod)
-        {
-            if (tbod.GetComponent<Renderer>().material.name == "paintsplattersmallblue (Instance)")
-            {
-                return true;
-            }
-            if (tbod.GetComponent<Renderer>().material.name == "paintsplattersmallorange (Instance)")
-            {
-                return true;
-            }
-            return false;
-        }
-
         public void AssignMaterial(GameObject clone_body, GameObject playermodel)
         {
-            if (clone_body != null && playermodel != null)
+            try
             {
-                playermodel.GetComponent<SkinnedMeshRenderer>().material = Plugin.Instance.player_main_material;
+                if (clone_body != null && playermodel != null)
+                {
+                    Renderer renderer = clone_body.GetComponent<Renderer>();
+                    string matName = renderer.material.name;
 
-                if (clone_body.GetComponent<Renderer>().material.name == "infected (Instance)")
-                {
-                    playermodel.GetComponent<SkinnedMeshRenderer>().material = Plugin.Instance.mat_preview[1];
-                }
-                else if (clone_body.GetComponent<Renderer>().material.name == "It (Instance)")
-                {
-                    playermodel.GetComponent<SkinnedMeshRenderer>().material = Plugin.Instance.mat_preview[2];
-                }
-                else if (clone_body.GetComponent<Renderer>().material.name == "ice (Instance)")
-                {
-                    playermodel.GetComponent<SkinnedMeshRenderer>().material = Plugin.Instance.mat_preview[3];
-                }
-                else
-                {
-                    if (IsBattleMat(clone_body) == true)
+                    Renderer skinnedMeshRenderer = playermodel.GetComponent<SkinnedMeshRenderer>();
+
+                    skinnedMeshRenderer.material = Plugin.Instance.player_main_material;
+
+                    if (MainGameMat.Contains(matName) || BrawlOutMat.Contains(matName))
                     {
-                        if (IsBattleMat2(clone_body) == true)
-                        {
-                            playermodel.GetComponent<SkinnedMeshRenderer>().material = clone_body.GetComponent<Renderer>().material;
-                        }
-                        else
-                        {
-                            playermodel.GetComponent<SkinnedMeshRenderer>().material = Plugin.Instance.player_main_material;
-                            playermodel.GetComponent<SkinnedMeshRenderer>().material.color = clone_body.GetComponent<Renderer>().material.color;
-                        }
+                        skinnedMeshRenderer.material = renderer.material;
+                        skinnedMeshRenderer.material.mainTextureScale = renderer.material.mainTextureScale * 0.5f;
+                    }
+                    else if (BrawlInMat.Contains(matName))
+                    {
+                        skinnedMeshRenderer.material = Plugin.Instance.player_main_material;
+                        skinnedMeshRenderer.material.SetColor("_Color", renderer.material.color * 0.5f);
                     }
                     else
-                    {
-                        playermodel.GetComponent<SkinnedMeshRenderer>().material = Plugin.Instance.player_main_material;
-                    }
+                        skinnedMeshRenderer.material = Plugin.Instance.player_main_material;
                 }
-
             }
-            else
+            catch (InvalidCastException e)
             {
-                if (clone_body == null)
-                    Debug.LogError("clone_body is null");
-                if (playermodel == null)
-                    Debug.LogError("playermodel is null");
+                Debug.LogError("Failed to set Playermodel gamemode material: " + e.Message);
             }
         }
 

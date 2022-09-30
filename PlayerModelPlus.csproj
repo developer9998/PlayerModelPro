@@ -292,5 +292,14 @@
     <Reference Include="websocket-sharp">
       <HintPath>$(GameAssemblyPath)\websocket-sharp.dll</HintPath>
     </Reference>
+
+    <Reference Include="SteamVR">
+	  <HintPath>$(GameAssemblyPath)\SteamVR.dll</HintPath>
+	</Reference>
+	  
+	<Reference Include="Newtonsoft.Json">
+	  <HintPath>$(BepInExAssemblyPath)\Newtonsoft.Json.dll</HintPath>
+	</Reference>
+	  
   </ItemGroup>
 </Project>

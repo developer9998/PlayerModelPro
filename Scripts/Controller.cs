@@ -43,6 +43,8 @@ namespace PlayerModelPlus.Scripts
         public GameObject headtarget;
         public GameObject poleR;
         public GameObject poleL;
+        public GameObject prevLeft;
+        public GameObject prevRight;
 
         public Quaternion headoffset;
 
@@ -92,13 +94,18 @@ namespace PlayerModelPlus.Scripts
                 Material[] material_array = material_list.ToArray();
 
                 player_preview = new GameObject("playemodel.preview");
+
                 var meshFilter = player_preview.AddComponent<MeshFilter>();
                 Mesh originalMesh = player_body.GetComponent<SkinnedMeshRenderer>().sharedMesh;
                 meshFilter.mesh = originalMesh;
-                MeshRenderer rend = player_preview.AddComponent<MeshRenderer>();//easy code really
+
+                MeshRenderer rend = player_preview.AddComponent<MeshRenderer>();//easy code really // nacho be quiet
                 rend.materials = material_array;
+
                 player_preview.transform.localScale = player_body.transform.localScale;
+
                 pos = Plugin.Instance.misc_preview.transform.position;
+
                 player_preview.transform.position = Plugin.Instance.misc_preview.transform.position;
 
                 Quaternion rot = Quaternion.Euler(-90f, -60f, 0f);
@@ -108,9 +115,132 @@ namespace PlayerModelPlus.Scripts
                 Plugin.Instance.author_text.text = playermodel_author.ToUpper();
 
                 Plugin.Instance.mat_preview[0] = player_preview.GetComponent<MeshRenderer>().material;
+                Plugin.Instance.ChangeMainButton();
+
                 player_preview.AddComponent<Spin>();
+                player_preview.GetComponent<MeshRenderer>().material = Plugin.Instance.mat_preview[Plugin.Instance.currentPreviewMaterial];
 
                 Destroy(parentAsset);
+            }
+
+            if (Plugin.Instance.fileName.Length >= 3)
+                PreviewSides(index);
+        }
+
+        public void PreviewSides(int index)
+        {
+            if (prevLeft != null)
+                Destroy(prevLeft);
+
+            int ind = index;
+
+            if (ind == Plugin.Instance.fileName.Length - 1)
+                ind = -1;
+
+            string path = Path.Combine(Plugin.Instance.playerpath, Plugin.Instance.fileName[ind + 1]);
+
+            AssetBundle playerbundle;
+            GameObject assetplayer;
+
+            playerbundle = AssetBundle.LoadFromFile(path);
+            assetplayer = playerbundle.LoadAsset<GameObject>("playermodel.ParentObject");
+
+            if (playerbundle != null && assetplayer != null)
+            {
+                // LEFT
+                var parentAsset = Instantiate(assetplayer);
+
+                playerbundle.Unload(false);
+
+                parentAsset.GetComponent<Text>().enabled = false;
+
+                player_body = parentAsset.transform.GetChild(0).gameObject.transform.Find("playermodel.body").gameObject;
+                List<Material> material_list = player_body.GetComponent<SkinnedMeshRenderer>().materials.ToList();
+
+                Material[] material_array = material_list.ToArray();
+
+                prevLeft = new GameObject("playemodel.previewLeft");
+
+                var meshFilter = prevLeft.AddComponent<MeshFilter>();
+                Mesh originalMesh = player_body.GetComponent<SkinnedMeshRenderer>().sharedMesh;
+                meshFilter.mesh = originalMesh;
+
+                MeshRenderer rend = prevLeft.AddComponent<MeshRenderer>();//easy code really // nacho be quiet
+                rend.materials = material_array;
+
+                prevLeft.transform.localScale = player_body.transform.localScale;
+
+                pos = Plugin.Instance.misc_preview.transform.position;
+
+                prevLeft.transform.position = Plugin.Instance.misc_preview.transform.position;
+
+                Quaternion rot = Quaternion.Euler(-90f, -60f, 0f);
+                prevLeft.transform.rotation = rot;
+
+                prevLeft.AddComponent<Spin>();
+
+                Destroy(parentAsset);
+
+                prevLeft.transform.localScale *= 0.35f;
+                prevLeft.transform.localPosition += Plugin.Instance.misc_preview.transform.right * -1 * 1.25f;
+                prevLeft.transform.localPosition += new Vector3(0, 0.25f, 0);
+            }
+
+            if (prevRight != null)
+                Destroy(prevRight);
+
+            int ind2 = index - 2;
+
+            if (index == 0)
+                ind2 = Plugin.Instance.fileName.Length - 2;
+
+            string path2 = Path.Combine(Plugin.Instance.playerpath, Plugin.Instance.fileName[ind2 + 1]);
+
+            AssetBundle playerbundle2;
+            GameObject assetplayer2;
+
+            playerbundle2 = AssetBundle.LoadFromFile(path2);
+            assetplayer2 = playerbundle2.LoadAsset<GameObject>("playermodel.ParentObject");
+
+            if (playerbundle2 != null && assetplayer2 != null)
+            {
+                // LEFT
+                var parentAsset = Instantiate(assetplayer2);
+
+                playerbundle2.Unload(false);
+
+                parentAsset.GetComponent<Text>().enabled = false;
+
+                player_body = parentAsset.transform.GetChild(0).gameObject.transform.Find("playermodel.body").gameObject;
+                List<Material> material_list = player_body.GetComponent<SkinnedMeshRenderer>().materials.ToList();
+
+                Material[] material_array = material_list.ToArray();
+
+                prevRight = new GameObject("playemodel.previewRight");
+
+                var meshFilter = prevRight.AddComponent<MeshFilter>();
+                Mesh originalMesh = player_body.GetComponent<SkinnedMeshRenderer>().sharedMesh;
+                meshFilter.mesh = originalMesh;
+
+                MeshRenderer rend = prevRight.AddComponent<MeshRenderer>();//easy code really // nacho be quiet
+                rend.materials = material_array;
+
+                prevRight.transform.localScale = player_body.transform.localScale;
+
+                pos = Plugin.Instance.misc_preview.transform.position;
+
+                prevRight.transform.position = Plugin.Instance.misc_preview.transform.position;
+
+                Quaternion rot = Quaternion.Euler(-90f, -60f, 0f);
+                prevRight.transform.rotation = rot;
+
+                prevRight.AddComponent<Spin>();
+
+                Destroy(parentAsset);
+
+                prevRight.transform.localScale *= 0.35f;
+                prevRight.transform.localPosition += Plugin.Instance.misc_preview.transform.right * 1 * 1.25f;
+                prevRight.transform.localPosition += new Vector3(0, 0.25f, 0);
             }
         }
 
