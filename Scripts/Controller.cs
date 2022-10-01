@@ -58,6 +58,12 @@ namespace PlayerModelPlus.Scripts
             if (player_preview != null)
                 Destroy(player_preview);
 
+            if (prevLeft != null)
+                Destroy(prevLeft);
+
+            if (prevRight != null)
+                Destroy(prevRight);
+
             string path = Path.Combine(Plugin.Instance.playerpath, Plugin.Instance.fileName[index]);
 
             AssetBundle playerbundle;
@@ -118,6 +124,7 @@ namespace PlayerModelPlus.Scripts
                 Plugin.Instance.ChangeMainButton();
 
                 player_preview.AddComponent<Spin>();
+
                 player_preview.GetComponent<MeshRenderer>().material = Plugin.Instance.mat_preview[Plugin.Instance.currentPreviewMaterial];
 
                 Destroy(parentAsset);
@@ -129,8 +136,6 @@ namespace PlayerModelPlus.Scripts
 
         public void PreviewSides(int index)
         {
-            if (prevLeft != null)
-                Destroy(prevLeft);
 
             int ind = index;
 
@@ -186,8 +191,7 @@ namespace PlayerModelPlus.Scripts
                 prevLeft.transform.localPosition += new Vector3(0, 0.25f, 0);
             }
 
-            if (prevRight != null)
-                Destroy(prevRight);
+           
 
             int ind2 = index - 2;
 
@@ -342,7 +346,7 @@ namespace PlayerModelPlus.Scripts
                 poleL = new GameObject("poleL");
                 poleL.transform.SetParent(root.transform, false);
                 // root, the playermodel's root
-                poleL.transform.localPosition = new Vector3(-5f, -5f, -10);
+                poleL.transform.localPosition = new Vector3(-6f, -5f, -10);
 
                 GameObject hand_l = GorillaTagger.Instance.offlineVRRig.leftHandTransform.parent.gameObject;
                 // hand_l, the gorillalocomotion's left hand
@@ -374,7 +378,7 @@ namespace PlayerModelPlus.Scripts
                 poleR.transform.SetParent(root.transform, false);
                 // root, the playermodel's root
 
-                poleR.transform.localPosition = new Vector3(5f, -5f, -10);
+                poleR.transform.localPosition = new Vector3(6f, -5f, -10);
 
                 GameObject hand_r = GorillaTagger.Instance.offlineVRRig.rightHandTransform.parent.gameObject;
                 // hand_r, the gorillalocomotion's right hand

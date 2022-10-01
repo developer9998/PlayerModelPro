@@ -300,6 +300,18 @@
 	<Reference Include="Newtonsoft.Json">
 	  <HintPath>$(BepInExAssemblyPath)\Newtonsoft.Json.dll</HintPath>
 	</Reference>
+	  <Reference Include="Bepinject">
+		  <HintPath>$(PluginsPath)\Bepinject-Auros\Bepinject.dll</HintPath>
+	  </Reference>
+	  <Reference Include="ComputerInterface">
+		  <HintPath>$(PluginsPath)\ComputerInterface\ComputerInterface.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Zenject">
+		  <HintPath>$(PluginsPath)\Extenject\Zenject.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Zenject-usage">
+		  <HintPath>$(PluginsPath)\Extenject\Zenject-usage.dll</HintPath>
+	  </Reference>
 	  
   </ItemGroup>
 </Project>

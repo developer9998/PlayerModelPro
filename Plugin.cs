@@ -13,6 +13,8 @@ using PlayerModelPlus.Scripts;
 using HarmonyLib;
 using UnityEngine.XR;
 using Valve.VR;
+using Bepinject;
+using PlayerModelPlus.Scripts.ComputerInterface;
 
 namespace PlayerModelPlus
 {
@@ -70,6 +72,7 @@ namespace PlayerModelPlus
         public bool isPriorModel = false;
         public string priorName = "";
         public int priorIndex = 0;
+        public WebClient downloadClient;
 
         void Start()
         {
@@ -78,6 +81,62 @@ namespace PlayerModelPlus
 
             Harmony harmony = new Harmony(PluginInfo.GUID);
             harmony.PatchAll();
+
+            Zenjector.Install<MainInstaller>().OnProject();
+
+            PlayerModelLogic.GetPlayerModelData();
+        }
+
+        public void RefreshPM() => StartCoroutine(RefreshPlayerModel());
+
+        IEnumerator RefreshPlayerModel()
+        {
+            if (!Directory.Exists(playerpath))
+            {
+                Directory.CreateDirectory(playerpath);
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            if (Directory.GetFiles(playerpath, "*.gtmodel").Length == 0)
+            {
+                WebClient webClient = new WebClient();
+                webClient.DownloadFile("https://drive.google.com/uc?export=download&id=1tz41u9au0TxWjRFQ5sYAqp2rnoIaTmP4", playerpath + @"\" + "Kyle The Robot" + ".gtmodel");
+
+                yield return new WaitForSeconds(0.2f);
+            }
+
+            // get files
+            files = Directory.GetFiles(playerpath, "*.gtmodel");//cant Path.GetFileName - cant convert string[] to string
+            fileName = new string[files.Length]; //creating new array with same length as files array
+
+            for (int i = 0; i < fileName.Length; i++)
+                fileName[i] = Path.GetFileName(files[i]); //getting file names from directories
+
+            if (playerIndex > fileName.Length)
+                playerIndex = fileName.Length - 1;
+
+            if (Controller.Instance != null)
+                Controller.Instance.PreviewModel(playerIndex);
+
+            yield break;
+        }
+
+        public void DownloadPlayerModel(string downloadURL, string playerName) => StartCoroutine(DownloadModel(downloadURL, playerName));
+
+        IEnumerator DownloadModel(string downloadURL, string playerName)
+        {
+            if (downloadClient == null)
+                downloadClient = new WebClient();
+
+            downloadClient.DownloadFile(@downloadURL, playerpath + @"\" + playerName + ".gtmodel");
+
+            yield return new WaitForSeconds(0.2f);
+
+            RefreshPM();
+
+            yield return new WaitForEndOfFrame();
+
+            yield break;
         }
 
         IEnumerator StartPlayerModel()
@@ -106,10 +165,13 @@ namespace PlayerModelPlus
             {
                 Directory.CreateDirectory(playerpath);
                 yield return new WaitForSeconds(0.1f);
+            }
 
+            if (Directory.GetFiles(playerpath, "*.gtmodel").Length == 0)
+            {
                 WebClient webClient = new WebClient();
-                webClient.DownloadFile("https://drive.google.com/uc?export=download&id=1tz41u9au0TxWjRFQ5sYAqp2rnoIaTmP4", playerpath + @"\Kyle The Robot.gtmodel");
-               
+                webClient.DownloadFile("https://drive.google.com/uc?export=download&id=1tz41u9au0TxWjRFQ5sYAqp2rnoIaTmP4", playerpath + @"\" + "Kyle The Robot" + ".gtmodel");
+
                 yield return new WaitForSeconds(0.2f);
             }
 
@@ -193,6 +255,9 @@ namespace PlayerModelPlus
             misc.transform.Find("Canvas").localPosition -= new Vector3(0, 0.135f, 0);
 
             // makes the update function work
+
+            yield return new WaitForSeconds(1);
+
             ModStart = true;
 
             yield break;
@@ -277,23 +342,23 @@ namespace PlayerModelPlus
                     break;
 
                 case 4:
-                    Controller.Instance.player_preview.GetComponent<MeshRenderer>().material = mat_preview[0];
                     currentPreviewMaterial = 0;
+                    Controller.Instance.player_preview.GetComponent<MeshRenderer>().material = mat_preview[0];
                     break;
 
                 case 5:
-                    Controller.Instance.player_preview.GetComponent<MeshRenderer>().material = mat_preview[1];
                     currentPreviewMaterial = 1;
+                    Controller.Instance.player_preview.GetComponent<MeshRenderer>().material = mat_preview[1];
                     break;
 
                 case 6:
-                    Controller.Instance.player_preview.GetComponent<MeshRenderer>().material = mat_preview[2];
                     currentPreviewMaterial = 2;
+                    Controller.Instance.player_preview.GetComponent<MeshRenderer>().material = mat_preview[2];
                     break;
 
                 case 7:
-                    Controller.Instance.player_preview.GetComponent<MeshRenderer>().material = mat_preview[3];
                     currentPreviewMaterial = 3;
+                    Controller.Instance.player_preview.GetComponent<MeshRenderer>().material = mat_preview[3];
                     break;
 
             }
@@ -301,6 +366,9 @@ namespace PlayerModelPlus
 
         void LateUpdate()
         {
+            if (!ModStart)
+                return;
+
             if (Controller.Instance == null)
                 return;
 
@@ -337,6 +405,9 @@ namespace PlayerModelPlus
                 ButtonToPress(6);
             if (Keyboard.current.mKey.wasPressedThisFrame)
                 ButtonToPress(7);
+
+            if (Keyboard.current.rKey.wasPressedThisFrame)
+                RefreshPM();
 
             if (playermodel != null)
             {

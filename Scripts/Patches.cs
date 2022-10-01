@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using HarmonyLib;
 using PlayerModelPlus.Scripts;
+using UnityEngine;
 
 namespace PlayerModelPlus.Scripts
 {
