@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace PlayerModelPlus.Scripts
+namespace PlayerModelPro.Scripts
 {
     public class Spin : MonoBehaviour
     {

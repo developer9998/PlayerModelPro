@@ -1,7 +1,7 @@
 ﻿using ComputerInterface.Interfaces;
 using System;
 
-namespace PlayerModelPlus.Scripts.ComputerInterface
+namespace PlayerModelPro.Scripts.ComputerInterface
 {
     public class PlayerModelEntry : IComputerModEntry
     {
@@ -10,6 +10,6 @@ namespace PlayerModelPlus.Scripts.ComputerInterface
 
         // This is the first view that is going to be shown if the user select you mod
         // The Computer Interface mod will instantiate your view 
-        public Type EntryViewType => typeof(PlayerModelView);
+        public Type EntryViewType => typeof(PlayerModelExplorer);
     }
 }

@@ -1,7 +1,7 @@
 ﻿using ComputerInterface.Interfaces;
 using Zenject;
 
-namespace PlayerModelPlus.Scripts.ComputerInterface
+namespace PlayerModelPro.Scripts.ComputerInterface
 {
     internal class MainInstaller : Installer
     {

@@ -2,7 +2,7 @@
 using System.Net;
 using Newtonsoft.Json;
 
-namespace PlayerModelPlus.Scripts.ComputerInterface
+namespace PlayerModelPro.Scripts.ComputerInterface
 {
     public class PlayerModelLogic
     {
@@ -11,6 +11,9 @@ namespace PlayerModelPlus.Scripts.ComputerInterface
 
         public static void GetPlayerModelData()
         {
+            if (UnityEngine.Application.internetReachability == UnityEngine.NetworkReachability.NotReachable)
+                return;
+
             WebClient wc = new WebClient();
             string json = wc.DownloadString("https://raw.githubusercontent.com/developer9998/PlayerModelDefaultPlayerModels/main/playerModelOnline.json");
 

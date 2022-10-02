@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System;
 
-namespace PlayerModelPlus.Scripts
+namespace PlayerModelPro.Scripts
 {
     public class Appearance : MonoBehaviourPunCallbacks
     {
@@ -13,6 +13,10 @@ namespace PlayerModelPlus.Scripts
         public List<GameObject> playerGameObjects = new List<GameObject>();
         public GameObject serverGameObjectD;
         public GameObject gorillabody;
+
+        public GameObject face;
+        public GameObject chest;
+        public GameObject body;
 
         public List<string> MainGameMat = new List<string>() { "infected (Instance)", "It (Instance)", "ice (Instance)" };
         public List<string> BrawlOutMat = new List<string>() { "paintsplattersmallblue (Instance)", "paintsplattersmallorange (Instance)" };
@@ -27,7 +31,7 @@ namespace PlayerModelPlus.Scripts
 
         Color gorillacolor;
 
-        void Start() => Instance = this;
+        void Start() => StartCoroutine(Begin());
 
         public void ShowOnlineRig() => StartCoroutine(ShowOrHideOnlineRig(true));
 
@@ -36,18 +40,25 @@ namespace PlayerModelPlus.Scripts
         public void HideOfflineRig() => StartCoroutine(ShowOrHideOffline(false));
 
         public void ShowOfflineRig() => StartCoroutine(ShowOrHideOffline(true));
+
+        IEnumerator Begin()
+        {
+            Instance = this;
+
+            face = GorillaTagger.Instance.offlineVRRig.mainSkin.transform.parent.Find("rig/body/head/gorillaface").gameObject;
+            chest = GorillaTagger.Instance.offlineVRRig.mainSkin.transform.parent.Find("rig/body/gorillachest").gameObject;
+            body = GorillaTagger.Instance.offlineVRRig.mainSkin.gameObject;
+
+            yield break;
+        }
             
         IEnumerator ShowOrHideOffline(bool show)
         {
             try
             {
-                GameObject gorillaface = GorillaTagger.Instance.offlineVRRig.mainSkin.transform.parent.Find("rig/body/head/gorillaface").gameObject;
-                GameObject gorillachest = GorillaTagger.Instance.offlineVRRig.mainSkin.transform.parent.Find("rig/body/gorillachest").gameObject;
-                GameObject gorillabody = GorillaTagger.Instance.offlineVRRig.mainSkin.gameObject;
-
-                gorillaface.layer = show ? 0 : 7;
-                gorillabody.layer = show ? 0 : 7;
-                gorillachest.GetComponent<MeshRenderer>().material = show ? Plugin.Instance.chestMaterial : Plugin.Instance.invisibleMaterial;
+                face.layer = show ? 0 : 7;
+                body.layer = show ? 0 : 7;
+                chest.GetComponent<Renderer>().material = show ? Plugin.Instance.chestMaterial : Plugin.Instance.invisibleMaterial;
                 ModelShown = show;
             }
             catch (InvalidCastException e)

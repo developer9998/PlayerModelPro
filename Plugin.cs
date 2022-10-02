@@ -9,14 +9,16 @@ using Photon.Pun;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using System.Net;
-using PlayerModelPlus.Scripts;
+using PlayerModelPro.Scripts;
 using HarmonyLib;
 using UnityEngine.XR;
 using Valve.VR;
 using Bepinject;
-using PlayerModelPlus.Scripts.ComputerInterface;
+using PlayerModelPro.Scripts.ComputerInterface;
+using System.Linq;
+using System.Collections.Generic;
 
-namespace PlayerModelPlus
+namespace PlayerModelPro
 {
     /// <summary>
     /// This is your mod's main class.
@@ -74,7 +76,7 @@ namespace PlayerModelPlus
         public int priorIndex = 0;
         public WebClient downloadClient;
 
-        void Start()
+        void Awake()
         {
             Instance = this;
             Events.GameInitialized += OnGameInitialized;
@@ -94,7 +96,12 @@ namespace PlayerModelPlus
             if (!Directory.Exists(playerpath))
             {
                 Directory.CreateDirectory(playerpath);
-                yield return new WaitForSeconds(0.1f);
+                yield return new WaitForSeconds(0.25f);
+
+                WebClient webClient = new WebClient();
+                webClient.DownloadFile("https://drive.google.com/uc?export=download&id=1tz41u9au0TxWjRFQ5sYAqp2rnoIaTmP4", playerpath + @"\" + "Kyle The Robot" + ".gtmodel");
+
+                yield return new WaitForSeconds(0.2f);
             }
 
             if (Directory.GetFiles(playerpath, "*.gtmodel").Length == 0)
@@ -141,11 +148,10 @@ namespace PlayerModelPlus
 
         IEnumerator StartPlayerModel()
         {
-            // creates the controller and appearance components
-            gameObject.AddComponent<Controller>();
-            gameObject.AddComponent<Appearance>();
+            yield return new WaitForSeconds(0.5f);
 
             // setting up materials
+
             invisibleMaterial = new Material(Shader.Find("Standard"));
             invisibleMaterial.SetColor("_Color", Color.clear);
             invisibleMaterial.SetFloat("_Mode", 2);
@@ -159,21 +165,31 @@ namespace PlayerModelPlus
 
             // creates the local folder
             rootPath = Directory.GetCurrentDirectory();
-            playerpath = Path.Combine(rootPath, "BepInEx", "Plugins", "PlayerModelPlus", "CustomModels");
+            playerpath = Path.Combine(rootPath, "BepInEx", "Plugins", "PlayerModelPro", "CustomModels");
 
             if (!Directory.Exists(playerpath))
             {
                 Directory.CreateDirectory(playerpath);
-                yield return new WaitForSeconds(0.1f);
+                yield return new WaitForSeconds(0.25f);
+
+                WebClient webClient = new WebClient();
+                webClient.DownloadFile("https://drive.google.com/uc?export=download&id=1tz41u9au0TxWjRFQ5sYAqp2rnoIaTmP4", playerpath + @"\" + "Kyle The Robot" + ".gtmodel");
             }
 
             if (Directory.GetFiles(playerpath, "*.gtmodel").Length == 0)
             {
                 WebClient webClient = new WebClient();
                 webClient.DownloadFile("https://drive.google.com/uc?export=download&id=1tz41u9au0TxWjRFQ5sYAqp2rnoIaTmP4", playerpath + @"\" + "Kyle The Robot" + ".gtmodel");
-
-                yield return new WaitForSeconds(0.2f);
             }
+
+            while (Directory.GetFiles(playerpath, "*.gtmodel").Length == 0)
+            {
+                yield return new WaitForSeconds(0.25f);
+            }
+
+            yield return new WaitForSeconds(1.5f);
+
+            playerpath = Path.Combine(rootPath, "BepInEx", "Plugins", "PlayerModelPro", "CustomModels");
 
             // get files
             files = Directory.GetFiles(playerpath, "*.gtmodel");//cant Path.GetFileName - cant convert string[] to string
@@ -182,8 +198,12 @@ namespace PlayerModelPlus
             for (int i = 0; i < fileName.Length; i++)
                 fileName[i] = Path.GetFileName(files[i]); //getting file names from directories
 
+            // creates the controller and appearance components
+            gameObject.AddComponent<Controller>();
+            gameObject.AddComponent<Appearance>();
+
             // get misc bundle
-            AssetBundle bundle = AssetBundle.LoadFromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream("PlayerModelPlus.Resources.PlayerModelStand"));
+            AssetBundle bundle = AssetBundle.LoadFromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream("PlayerModelPro.Resources.PlayerModelStand"));
             GameObject localasset = Instantiate(bundle.LoadAsset<GameObject>("misc"));
 
             // get the gameobject and add the components
@@ -240,7 +260,6 @@ namespace PlayerModelPlus
 
             // gets the text mesh and adds its 
             nachoEngineText = misc.transform.Find("nachoengine_playermodelmod");
-            nachoEngineText.gameObject.AddComponent<Preview>();
 
             // moves the object down
             misc.transform.Find("displaytext").localPosition -= new Vector3(0, 0.135f, 0);
@@ -278,10 +297,6 @@ namespace PlayerModelPlus
                 assignedIndex = playerIndex;
                 IsGorilla = false;
                 Controller.Instance.AssignModel();
-
-                PlayerPrefs.SetInt("PlayerModelProIsPriorModel", 1);
-                PlayerPrefs.SetString("PlayerModelProPriorName", fileName[playerIndex]);
-                PlayerPrefs.SetInt("PlayerModelProPriorIndex", playerIndex);
             }
             else
             {
@@ -290,10 +305,6 @@ namespace PlayerModelPlus
                     Controller.Instance.UnloadModel();
                     IsGorilla = true;
                     player_main_material = null;
-
-                    PlayerPrefs.SetInt("PlayerModelProIsPriorModel", 0);
-                    PlayerPrefs.SetString("PlayerModelProPriorName", fileName[playerIndex]);
-                    PlayerPrefs.SetInt("PlayerModelProPriorIndex", playerIndex);
                 }
                 else//playermodel to playermodel
                 {
@@ -301,10 +312,6 @@ namespace PlayerModelPlus
                     IsGorilla = false;
                     player_main_material = null;
                     assignedIndex = playerIndex;
-
-                    PlayerPrefs.SetInt("PlayerModelProIsPriorModel", 1);
-                    PlayerPrefs.SetString("PlayerModelProPriorName", fileName[playerIndex]);
-                    PlayerPrefs.SetInt("PlayerModelProPriorIndex", playerIndex);
                 }
             }
 

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 
-namespace PlayerModelPlus.Scripts.ComputerInterface
+namespace PlayerModelPro.Scripts.ComputerInterface
 {
     public class PlayerModelPreview : ComputerView
     {
@@ -126,7 +126,7 @@ namespace PlayerModelPlus.Scripts.ComputerInterface
                     break;
                 case EKeyboardKey.Back:
                     // "ReturnToMainMenu" will basically switch to the main menu again
-                    ShowView<PlayerModelView>();
+                    ShowView<PlayerModelExplorer>();
                     break;
             }
         }

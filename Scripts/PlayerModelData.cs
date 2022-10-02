@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace PlayerModelPlus.Scripts
+namespace PlayerModelPro.Scripts
 {
     [Serializable]
     public class PlayerModelData

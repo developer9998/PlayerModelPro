@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 using HarmonyLib;
-using PlayerModelPlus.Scripts;
+using PlayerModelPro.Scripts;
 using UnityEngine;
 
-namespace PlayerModelPlus.Scripts
+namespace PlayerModelPro.Scripts
 {
     /// <summary>
 	/// This is an example patch, made to demonstrate how to use Harmony. You should remove it if it is not used.
@@ -17,10 +17,7 @@ namespace PlayerModelPlus.Scripts
     {
         private static void Prefix(Controller __instance)
         {
-            if (Controller.Instance == null)
-                __instance.PreviewModel(0);
-            else
-                Controller.Instance.PreviewModel(0);
+            __instance.PreviewModel(0);
         }
     }
 }

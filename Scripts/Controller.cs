@@ -5,8 +5,10 @@ using System.Collections.Generic;
 using System.Linq;
 using DitzelGames.FastIK;
 using System;
+using Steamworks;
+using GorillaLocomotion;
 
-namespace PlayerModelPlus.Scripts
+namespace PlayerModelPro.Scripts
 {
     public class Controller : MonoBehaviour
     {
@@ -26,6 +28,7 @@ namespace PlayerModelPlus.Scripts
 
         public bool CustomColors;
         public bool GameModeTextures;
+        public bool customSpot = false;
 
         public float rotationY = -60f;
         public float localPositionY = 0.15f;
@@ -45,12 +48,99 @@ namespace PlayerModelPlus.Scripts
         public GameObject poleL;
         public GameObject prevLeft;
         public GameObject prevRight;
-
+        public GameObject otherPreview;
         public Quaternion headoffset;
 
         void Start()
         {
             Instance = this;
+        }
+
+        public void PreviewThatOtherShit(int index)
+        {
+            if (otherPreview != null)
+                Destroy(otherPreview);
+
+            string path = Path.Combine(Plugin.Instance.playerpath, Plugin.Instance.fileName[index]);
+
+            AssetBundle playerbundle;
+            GameObject assetplayer;
+
+            try
+            {
+                playerbundle = AssetBundle.LoadFromFile(path);
+                assetplayer = playerbundle.LoadAsset<GameObject>("playermodel.ParentObject");
+            }
+            catch (InvalidCastException e)
+            {
+                Debug.LogError("Failed to retrive new playermodel:" + e.Message);
+                return;
+            }
+
+            if (playerbundle != null && assetplayer != null)
+            {
+                var parentAsset = Instantiate(assetplayer);
+
+                playerbundle.Unload(false);
+
+                player_info_stream = parentAsset.GetComponent<Text>().text;
+                player_info = player_info_stream.Split('$');
+
+                parentAsset.GetComponent<Text>().enabled = false;
+
+                playermodel_name = player_info[0];
+                playermodel_author = player_info[1];
+
+                player_body = parentAsset.transform.GetChild(0).gameObject.transform.Find("playermodel.body").gameObject;
+                List<Material> material_list = player_body.GetComponent<SkinnedMeshRenderer>().materials.ToList();
+
+                Material[] material_array = material_list.ToArray();
+
+                otherPreview = new GameObject("playemodel.previewHouse");
+
+                var meshFilter = otherPreview.AddComponent<MeshFilter>();
+                Mesh originalMesh = player_body.GetComponent<SkinnedMeshRenderer>().sharedMesh;
+                meshFilter.mesh = originalMesh;
+
+                MeshRenderer rend = otherPreview.AddComponent<MeshRenderer>();//easy code really // nacho be quiet
+                rend.materials = material_array;
+
+                pos = Plugin.Instance.misc_preview.transform.position;
+                otherPreview.transform.localScale = player_body.transform.localScale;
+
+                if (GameObject.Find("Level/forest").activeInHierarchy)
+                {
+                    otherPreview.transform.position = new Vector3(-68.6798f, 11.8345f, -81.7803f);
+                    otherPreview.transform.localScale *= 0.85f;
+                }
+                else if (GameObject.Find("Level/mountain").activeInHierarchy)
+                {
+                    otherPreview.transform.position = new Vector3(-26.1865f, 17.9029f, -94.3946f);
+                    otherPreview.transform.localScale *= 0.85f;
+                }
+                else
+                {
+                    otherPreview.transform.position = Vector3.one * 1000;
+                    return;
+                }
+
+                otherPreview.AddComponent<PreviewRoom>();
+
+                Quaternion rot = Quaternion.Euler(-90f, -60f, 0f);
+                otherPreview.transform.rotation = rot;
+
+                Plugin.Instance.model_text.text = playermodel_name.ToUpper(); ;
+                Plugin.Instance.author_text.text = playermodel_author.ToUpper();
+
+                Plugin.Instance.mat_preview[0] = otherPreview.GetComponent<MeshRenderer>().material;
+                Plugin.Instance.ChangeMainButton();
+
+                //otherPreview.AddComponent<Spin>();
+
+                otherPreview.GetComponent<MeshRenderer>().material = Plugin.Instance.mat_preview[Plugin.Instance.currentPreviewMaterial];
+
+                Destroy(parentAsset);
+            }
         }
 
         public void PreviewModel(int index)
@@ -108,11 +198,12 @@ namespace PlayerModelPlus.Scripts
                 MeshRenderer rend = player_preview.AddComponent<MeshRenderer>();//easy code really // nacho be quiet
                 rend.materials = material_array;
 
-                player_preview.transform.localScale = player_body.transform.localScale;
 
                 pos = Plugin.Instance.misc_preview.transform.position;
+                player_preview.transform.localScale = player_body.transform.localScale;
 
                 player_preview.transform.position = Plugin.Instance.misc_preview.transform.position;
+                player_preview.transform.localScale = player_body.transform.localScale;
 
                 Quaternion rot = Quaternion.Euler(-90f, -60f, 0f);
                 player_preview.transform.rotation = rot;
@@ -129,6 +220,8 @@ namespace PlayerModelPlus.Scripts
 
                 Destroy(parentAsset);
             }
+
+            //PreviewThatOtherShit(index);
 
             if (Plugin.Instance.fileName.Length >= 3)
                 PreviewSides(index);
@@ -421,6 +514,9 @@ namespace PlayerModelPlus.Scripts
                 headoffset = headtarget.transform.localRotation;
                 headbone.transform.SetParent(headtarget.transform, true);
                 headbone.transform.localRotation = Quaternion.Euler(headoffset.x - 8, headoffset.y, headoffset.z);
+
+                poleL.AddComponent<Pole>().hand = Player.Instance.leftHandTransform;
+                poleR.AddComponent<Pole>().hand = Player.Instance.rightHandTransform;
             }
             catch (InvalidCastException e)
             {
